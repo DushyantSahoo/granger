@@ -1,4 +1,4 @@
-function [b,steps,G,a2,error,drop] = larsen(X, y, delta, stop, Gram, storepath, verbose, Error, g)
+function [b,steps,G,a2,error,drop] = larsen(X, y, delta, stop, Gram, storepath, verbose, g)
 %LARSEN The LARS-EN algorithm for estimating Elastic Net solutions.
 %
 %   BETA = LARSEN(X, Y, DELTA, STOP, GRAM, STOREPATH, VERBOSE) evaluates
@@ -21,7 +21,6 @@ function [b,steps,G,a2,error,drop] = larsen(X, y, delta, stop, Gram, storepath, 
 %   [1] H. Zou and T. Hastie. Regularization and variable selection via the
 %   elastic net. J. Royal Stat. Soc. B. 67(2):301-320, 2005. 
 %
-%  See also ELASTICNET, LASSO, SPCA, SLDA.
 
 %% algorithm setup
 [n p] = size(X);
@@ -203,11 +202,9 @@ while length(A) < maxVariables && ~stopCond && step < maxSteps
   end
     
     upper1 = a2;
-    %lower1 = norm(Y_new,2);
+
     normb = a1;
-  %if (upper1/lower1) < Error
-  %    break
-  %end
+
   
 end
 
