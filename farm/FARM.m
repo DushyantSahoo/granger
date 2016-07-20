@@ -1,32 +1,34 @@
-function FARM(fMRI_filename,lambda,output_foldername)
+function FARM(fMRI_filename,lambda,output_foldername, thres)
 
-fMRI_filename  = char(fMRI_filename);
-library_location  = char('/usr/lib/granger/');
-addpath(library_location);
-% Main function
-	% Intialize 
-
-    intial_location=load_nii(fMRI_filename);
-
-    y = intial_location.img;
-
+	fMRI_filename  = char(fMRI_filename);
+	
+	% add library path
+	library_location  = char('/usr/lib/granger/');
+	addpath(library_location);
+	
+	% load nii fmri file 
+	intial_location=load_nii(fMRI_filename);
+	y = intial_location.img;
+	
     Size = size(y);
     a = Size(1);
     b = Size(2);
     c = Size(3);
     d = Size(4);
     itemp = 1;
-	% Threshold filtered_func_data.nii.gz file and convert 3D array to 1D
+    
+	% Threshold input file and convert 3D array to 1D
     for i = 1:a
         for j = 1:b
             for k = 1:c
-                if (mean(y(i,j,k,:)) > 6000)
+                if (mean(y(i,j,k,:)) > thres)
                     number(:,itemp) = y(i,j,k,:);
                     itemp = itemp+1;
                 end
             end
         end
     end
+    
 	% Intialization of paramters
     number = double(number);
     Size1 = size(number);
@@ -37,6 +39,7 @@ addpath(library_location);
     beta4 = zeros(b1,1);
     beta5 = zeros(b1,1);
     beta6 = zeros(b1,1);
+    
 	% Granger Causality Analysis
     for i1 = 1:b1
         
@@ -45,11 +48,12 @@ addpath(library_location);
         number1(:,i1) = [];
         temp1 = number(2:d,i1);
         temp2 = number1(1:(d-1),:);
+        
+        % normalize data
         new = zscore(temp1) ;
-        new = new/norm(new,2);
         new1 = zscore(temp2);
-        new1 = new1/norm(new1(:,2),2);
-	% Lasso function
+        
+		% Lasso function
         [beta ,steps,G,residuals,error,drop] = lasso(new1, new, 0, false,false,10^(-9),double(lambda));
 
         if i1 == 1
@@ -65,7 +69,7 @@ addpath(library_location);
         end
         
          beta3(i1) = steps;
-         beta4(i1) = 1-residuals;
+         beta4(i1) = (residuals)^2;
         
         
     end
@@ -91,7 +95,7 @@ addpath(library_location);
         end
     end
 	% Save all the files
-    csvwrite(strcat(output_foldername,'/beta.csv'),invbeta1);
+    csvwrite(strcat(output_foldername,'/beta.csv'),Beta);
     nii_file = make_nii(single(invbeta1));
     nii_file.hdr = intial_location.hdr;
     nii_file.hdr.dime.dim(5) = 1;
